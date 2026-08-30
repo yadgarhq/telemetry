@@ -13,6 +13,11 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
 tracing = "0.1"
+# The metrics FACADE only. A library that installs an exporter decides the
+# backend for every service that links it; the binary installs one (see
+# `metrics::install_prometheus`) so the choice stays with the deployment.
+metrics = "0.24"
+metrics-exporter-prometheus = { version = "0.17", default-features = false, features = ["http-listener"] }
 
 [build-dependencies]
 tonic-prost-build = "0.14"

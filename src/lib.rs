@@ -22,6 +22,8 @@
 #![forbid(unsafe_code)]
 
 pub mod estimator;
+pub mod metrics;
+pub mod observe;
 pub mod record;
 
 /// Generated from the vendored contract (D16, D70).
