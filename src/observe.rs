@@ -6,6 +6,7 @@
 //! also what makes `observe-coverage` checkable: a handler either goes through
 //! here or it does not.
 
+use std::future::Future;
 use std::time::Instant;
 
 use crate::estimator::Class;
@@ -31,8 +32,17 @@ pub struct Scope {
 pub struct Outcome {
     /// The gRPC status name. A bounded value — it reaches a metric label.
     pub status: &'static str,
-    /// What was returned, for measurement. Empty on an error path.
+    /// What was returned, rendered as text — used for the WORD count only.
+    /// Empty on an error path.
     pub payload: String,
+
+    /// The exact encoded size on the wire.
+    ///
+    /// Set it. Without it, bytes are counted from `payload`, which is a Debug or
+    /// display rendering and measures the wrong thing — right order of
+    /// magnitude, wrong in detail. A prost message knows its own
+    /// `encoded_len()`, so the exact number is available without a gateway.
+    pub encoded_bytes: Option<u64>,
     pub class: Class,
     pub rows: u32,
     pub suppressed: bool,
@@ -116,6 +126,12 @@ impl Call {
         if !outcome.payload.is_empty() {
             builder = builder.payload(&outcome.payload, outcome.class);
         }
+        // The encoded length wins over the rendered one: words come from the
+        // text, bytes from the wire. Two features, two sources, each measuring
+        // what it actually is.
+        if let Some(bytes) = outcome.encoded_bytes {
+            builder = builder.encoded_bytes(bytes);
+        }
 
         let built = builder.build();
         record::emit(&built);
@@ -130,6 +146,33 @@ impl Call {
         if outcome.bytes_suppressed > 0 {
             metrics::suppressed(self.service, self.tool, outcome.bytes_suppressed);
         }
+    }
+
+    /// Run a handler body, classify its outcome, and emit exactly once.
+    ///
+    /// **This is what makes an error path classified rather than `UNRECORDED`.**
+    /// A handler using `?` returns early and drops the `Call`, which records that
+    /// it happened but not what it was — failures counted, not classified. Here
+    /// the body's `Result` is inspected before the record is written.
+    ///
+    /// Generic over the error rather than taking a `tonic::Status`, so this crate
+    /// stays transport-agnostic: the caller supplies the mapping to a bounded
+    /// label, which is the only thing a metric can safely carry.
+    pub async fn run<T, E, F>(
+        self,
+        body: F,
+        describe: impl FnOnce(&T) -> Outcome,
+        classify: impl FnOnce(&E) -> &'static str,
+    ) -> Result<T, E>
+    where
+        F: Future<Output = Result<T, E>>,
+    {
+        let result = body.await;
+        match &result {
+            Ok(value) => self.finish(describe(value)),
+            Err(e) => self.fail(classify(e)),
+        }
+        result
     }
 
     /// Finish an error path.

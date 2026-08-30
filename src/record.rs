@@ -73,6 +73,16 @@ impl Builder {
         self
     }
 
+    /// Override the byte count with the exact encoded size.
+    ///
+    /// `payload` measures a rendering; this measures the wire. Words stay from
+    /// the rendering because the encoded form has none — each feature comes from
+    /// the source that actually has it.
+    pub fn encoded_bytes(mut self, bytes: u64) -> Self {
+        self.record.bytes_returned = bytes;
+        self
+    }
+
     pub fn rows_returned(mut self, n: u32) -> Self {
         self.record.rows_returned = n;
         self
