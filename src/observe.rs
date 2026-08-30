@@ -51,6 +51,10 @@ pub struct Call {
     scope: Scope,
     started: Instant,
     span: tracing::Span,
+    /// Set by `finish`, checked by `Drop`. Without it a handler that returns
+    /// early — every `?` on an error path — would emit nothing at all, so
+    /// failures would be the one outcome the telemetry could not see.
+    finished: bool,
 }
 
 impl Call {
@@ -72,6 +76,7 @@ impl Call {
             scope,
             started: Instant::now(),
             span,
+            finished: false,
         }
     }
 
@@ -88,7 +93,12 @@ impl Call {
     /// and the response still goes out. That is the exact opposite of D69's
     /// capability probe, which must always fail boot — the two rules point
     /// opposite ways on purpose.
-    pub fn finish(self, outcome: Outcome) {
+    pub fn finish(mut self, outcome: Outcome) {
+        self.finished = true;
+        self.emit(outcome);
+    }
+
+    fn emit(&self, outcome: Outcome) {
         let elapsed = self.started.elapsed();
 
         let mut builder = record::Builder::new(self.service, self.tool, self.kind)
@@ -130,6 +140,28 @@ impl Call {
     pub fn fail(self, status: &'static str) {
         self.finish(Outcome {
             status,
+            ..Default::default()
+        });
+    }
+}
+
+/// A call that ended without `finish` is still recorded.
+///
+/// **This is what makes coverage structural rather than a habit.** Every `?` on
+/// an error path drops the `Call`, and without this the one outcome telemetry
+/// could not see would be failure — the outcome most worth seeing.
+///
+/// It reports `UNRECORDED` rather than guessing a status, so a handler that
+/// genuinely forgot to call `finish` is visible in the data as a distinct value
+/// rather than silently counted as an error, and `observe-coverage` has something
+/// to point at.
+impl Drop for Call {
+    fn drop(&mut self) {
+        if self.finished {
+            return;
+        }
+        self.emit(Outcome {
+            status: "UNRECORDED",
             ..Default::default()
         });
     }
