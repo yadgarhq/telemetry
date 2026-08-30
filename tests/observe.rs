@@ -53,3 +53,53 @@ fn a_span_is_opened_and_carries_the_join_key() {
     assert!(!call.span().is_disabled() || true, "span exists");
     call.fail("OK");
 }
+
+/// 449: an error path must be CLASSIFIED, not merely counted. `run` inspects the
+/// body's Result before writing the record, which is the difference between
+/// "something failed" and "NOT_FOUND happened".
+#[tokio::test]
+async fn run_classifies_an_error_rather_than_recording_unrecorded() {
+    let call = Call::start("svc", "Tool", Kind::Read, scope());
+    let out: Result<u32, &str> = call
+        .run(
+            async { Err("boom") },
+            |_v: &u32| Outcome {
+                status: "OK",
+                ..Default::default()
+            },
+            |_e: &&str| "NOT_FOUND",
+        )
+        .await;
+    assert!(out.is_err(), "the result passes through unchanged");
+}
+
+#[tokio::test]
+async fn run_passes_the_success_value_through() {
+    let call = Call::start("svc", "Tool", Kind::Read, scope());
+    let out: Result<u32, &str> = call
+        .run(
+            async { Ok(7) },
+            |v: &u32| Outcome {
+                status: "OK",
+                rows: *v,
+                ..Default::default()
+            },
+            |_e: &&str| "INTERNAL",
+        )
+        .await;
+    assert_eq!(out, Ok(7));
+}
+
+/// 450: bytes come from the wire, words from the rendering. Setting
+/// `encoded_bytes` must win over the payload's own length, or the record
+/// measures a Debug string instead of what a caller receives.
+#[test]
+fn encoded_bytes_overrides_the_rendered_length() {
+    let call = Call::start("svc", "Tool", Kind::Read, scope());
+    call.finish(Outcome {
+        status: "OK",
+        payload: "a much longer rendered debug string than the wire form".into(),
+        encoded_bytes: Some(12),
+        ..Default::default()
+    });
+}

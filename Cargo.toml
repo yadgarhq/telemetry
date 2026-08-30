@@ -19,6 +19,15 @@ tracing = "0.1"
 metrics = "0.24"
 metrics-exporter-prometheus = { version = "0.17", default-features = false, features = ["http-listener"] }
 
+# OPTIONAL, behind the `grpc` feature. The crate stays transport-agnostic by
+# default — a job or a hook emitting records must not pull a gRPC stack — while
+# every gRPC service shares ONE status mapping instead of writing its own.
+tonic = { version = "0.14", default-features = false, optional = true }
+
+[features]
+default = []
+grpc = ["dep:tonic"]
+
 [build-dependencies]
 tonic-prost-build = "0.14"
 
@@ -27,3 +36,6 @@ unsafe_code = "forbid"
 
 [lints.clippy]
 all = { level = "deny", priority = -1 }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

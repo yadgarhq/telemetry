@@ -22,6 +22,8 @@
 #![forbid(unsafe_code)]
 
 pub mod estimator;
+#[cfg(feature = "grpc")]
+pub mod grpc;
 pub mod metrics;
 pub mod observe;
 pub mod record;
