@@ -94,3 +94,18 @@ fn error_against_ground_truth_is_measurable() {
         "no ground truth means no error figure"
     );
 }
+
+/// The default class is Mixed, not Prose. A payload nobody classified must not
+/// be assumed to be the cheapest kind — that under-reports it silently, which is
+/// the direction that makes a response look cheaper than it is.
+#[test]
+fn the_default_class_is_conservative() {
+    assert_eq!(Class::default(), Class::Mixed);
+    let f = Features {
+        bytes: 300,
+        words: 30,
+    };
+    let (mixed, _) = estimate(f, Class::default());
+    let (prose, _) = estimate(f, Class::Prose);
+    assert!(mixed > prose, "the default must not be the cheapest class");
+}

@@ -25,7 +25,7 @@ pub const VERSION: &str = "bytes-words-v1";
 /// Deliberately coarse: these are the shapes yadgar actually returns, not a
 /// taxonomy of text. A class splits when a measurement shows it should, and the
 /// version changes when it does.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Class {
     /// Sentences. The case where words track tokens most closely.
     Prose,
@@ -35,7 +35,12 @@ pub enum Class {
     /// JSON or protobuf-shaped output: field names, punctuation, structure.
     /// Tokenizes heavily while barely registering as words.
     Envelope,
-    /// Mixed, or not yet classified. The conservative default.
+    /// Mixed, or not yet classified.
+    ///
+    /// THE DEFAULT, and deliberately not the cheapest class: a payload nobody
+    /// classified must not be assumed to be prose, because that under-reports it
+    /// silently — the direction that makes a response look cheaper than it is.
+    #[default]
     Mixed,
 }
 
