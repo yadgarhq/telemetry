@@ -39,3 +39,25 @@ all = { level = "deny", priority = -1 }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+# The tests read what was emitted rather than asserting it did not panic, so
+# they need the JSON back as values — that is what pins `Wire`'s field mapping,
+# where transposing user_id and project_id is otherwise invisible.
+serde_json = "1"
+# `DebuggingRecorder` + `with_local_recorder`: the only way to assert that the
+# metric NAMES a dashboard queries, and the value the bytes counter actually
+# receives, are what this crate claims. MUST resolve against metrics 0.24 — a
+# metrics-util built on another major links a SECOND facade, and then the
+# snapshot is empty while every assertion still compiles and passes.
+metrics-util = { version = "0.20", features = ["debugging"] }
+# A feature-gated test target needs the optional dependency nameable from the
+# test itself; `--all-features` enables the feature but does not make an
+# optional dependency a dev-dependency.
+tonic = { version = "0.14", default-features = false }
+
+# `cargo test --all-features` (what CI runs) builds this. A plain `cargo test`
+# SKIPS it rather than failing to compile — the alternative is making `grpc` a
+# default feature, which would drag a gRPC stack into every job and hook that
+# emits a record, and the crate is transport-agnostic on purpose.
+[[test]]
+name = "grpc"
+required-features = ["grpc"]
