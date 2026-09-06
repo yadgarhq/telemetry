@@ -18,9 +18,24 @@
 //!
 //! That is the exact opposite of the capability probe (D69), which must ALWAYS
 //! fail boot. The two rules point opposite ways on purpose.
+//!
+//! # Text an operator reads is written once, too
+//!
+//! [`diagnose::chain`] and `grpc::status_name` are not signals and do not
+//! belong in the table above. They are here for the reason D19 and D51 give:
+//! each had been written once per service, and a phrase rendered per service is
+//! a phrase five services can disagree about. `status_name` bounds the label a
+//! dashboard groups by; `chain` is the sentence a refusing process leaves in a
+//! crash loop.
+//!
+//! **`grpc::status_name` is written in plain backticks rather than as an
+//! intra-doc link, and deliberately.** It sits behind the `grpc` feature, and a
+//! link to an item behind a `cfg` is a broken link in the build where the `cfg`
+//! is off.
 
 #![forbid(unsafe_code)]
 
+pub mod diagnose;
 pub mod estimator;
 #[cfg(feature = "grpc")]
 pub mod grpc;
