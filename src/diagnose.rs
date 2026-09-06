@@ -16,8 +16,11 @@
 ///
 /// # Why this is not `error.to_string()`
 ///
-/// `tonic::transport::Error` displays as the three words "transport error" and
-/// keeps what actually went wrong in its source. So a message built from the
+/// `tonic::transport::Error` displays as the two words "transport error" and
+/// keeps what actually went wrong in its source. Two words, counted rather than
+/// remembered: `Display` is `f.write_str(self.description())` and
+/// `description()` returns that literal for `Kind::Transport` (tonic 0.14.6
+/// `src/transport/error.rs:79-83` and `:52-54`). So a message built from the
 /// head of the chain tells an operator that the transport failed and nothing
 /// about which file was unreadable or which key did not match its certificate.
 /// Losing it is the same class of mistake as printing `Debug` from `main`.
