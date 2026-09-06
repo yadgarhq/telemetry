@@ -62,3 +62,21 @@ recomputed.
 JSON to stdout, collected by the cluster. Not an RPC: a telemetry call on every
 request would add a hop to the path that must not block, and stdout survives
 yadgar being broken in a way a telemetry service does not.
+
+## One sentence for a refusal, written once
+
+`diagnose::chain` flattens an error and everything under it into one line.
+`tonic::transport::Error` displays as the three words "transport error" and
+keeps the reason in its source, so a message built from the head of the chain
+tells an operator that the transport failed and nothing about which file was
+unreadable or which key did not match its certificate.
+
+It was written five times before it was written here — `iam`, `iam-db`, `task`,
+`task-db` and `project-db` — under two names, `chain` in two of them and
+`describe` in three, with the same body in all five. The two names are why the
+count is five: a sweep that grepped for either name alone would have found part
+of the set and reported the unit consolidated (ADR-0591).
+
+It is not a fourth signal and it is not behind the `grpc` feature. The signature
+names `std::error::Error` and nothing else, and three of the five copies sat in
+boot paths that never touch a transport.
