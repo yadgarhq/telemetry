@@ -66,7 +66,7 @@ yadgar being broken in a way a telemetry service does not.
 ## One sentence for a refusal, written once
 
 `diagnose::chain` flattens an error and everything under it into one line.
-`tonic::transport::Error` displays as the three words "transport error" and
+`tonic::transport::Error` displays as the two words "transport error" and
 keeps the reason in its source, so a message built from the head of the chain
 tells an operator that the transport failed and nothing about which file was
 unreadable or which key did not match its certificate.
