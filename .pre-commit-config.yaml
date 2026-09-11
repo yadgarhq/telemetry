@@ -22,7 +22,7 @@ repos:
   # at first install and never re-resolves it, so a moving tag would silently
   # freeze each machine at whatever it meant the day it first ran.
   - repo: https://github.com/yadgarhq/actions
-    rev: v1.18.2
+    rev: v1.20.0
     hooks:
       - id: gitleaks
       - id: prettier
@@ -85,3 +85,12 @@ repos:
       # and this repository measures 0. It is a tripwire for a block someone
       # writes later, not a fix for anything present now.
       - id: run-block-size
+      # LEDGER 837. The hook refuses a test that stops running rather than
+      # fails: a skip marker, an unsatisfiable `cfg`, an environment-probe
+      # guard as a test's first statement, a narrowed `cargo test`/pytest
+      # invocation, or a captured run whose exit code got suppressed.
+      # Publishing this in yadgarhq/actions did not gate telemetry —
+      # ADR-0577 — so this line is the part that does. The rev bump also
+      # carries v1.19.0's `observe-coverage` tightening, which finds nothing
+      # to refuse here.
+      - id: no-test-skips
