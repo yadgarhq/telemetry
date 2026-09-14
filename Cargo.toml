@@ -17,7 +17,7 @@ tracing = "0.1"
 # backend for every service that links it; the binary installs one (see
 # `metrics::install_prometheus`) so the choice stays with the deployment.
 metrics = "0.24"
-metrics-exporter-prometheus = { version = "0.17", default-features = false, features = ["http-listener"] }
+metrics-exporter-prometheus = { version = "0.18", default-features = false, features = ["http-listener"] }
 
 # OPTIONAL, behind the `grpc` feature. The crate stays transport-agnostic by
 # default — a job or a hook emitting records must not pull a gRPC stack — while
