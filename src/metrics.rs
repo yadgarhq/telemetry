@@ -55,7 +55,7 @@ pub fn suppressed(service: &'static str, tool: &'static str, bytes: u64) {
 pub fn install_prometheus(addr: SocketAddr) -> Result<(), Box<dyn std::error::Error>> {
     metrics_exporter_prometheus::PrometheusBuilder::new()
         .with_http_listener(addr)
-        .install()?;
+        .install()?; // ADR-0569-EXCEPTION(LIB): no .set_quantiles()/.set_buckets() call, so DURATION renders as a Prometheus summary at metrics-exporter-prometheus 0.18's own compiled-in quantiles 0.0, 0.5, 0.9, 0.95, 0.99, 0.999, 1.0 (ledger 1281 N10); changing to buckets changes the metric type, and any future dashboard or alert would read whichever form ships; Q-C2 decides.
     tracing::info!(%addr, "metrics endpoint listening");
     Ok(())
 }
