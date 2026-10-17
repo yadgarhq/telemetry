@@ -34,12 +34,19 @@ pub const DURATION: &str = "yadgar_call_duration_seconds";
 ///   typical. Without sub-millisecond edges every db call lands in one bucket.
 /// - `0.0025`–`0.1`: everything that is neither floored nor timing out.
 ///   The slowest unfloored call measured 70 ms (`create_task`, cold).
+/// - `0.15` and `0.2`: resolution below the `Login` floor. An Argon2 verify
+///   runs 27–136 ms worst case, so its headroom under 250 ms needs edges
+///   between `0.1` and `0.25`.
 /// - `0.25` and `0.3`: iam's `Login` response floor, `responseFloorMs: 250`
-///   in the iam chart. `gateway auth/login` measured 0.253–0.258 s. A floored
-///   call belongs in `(0.25, 0.3]`; a non-zero `le="0.25"` count on a floored
-///   tool says the floor did not hold, which is a security signal.
+///   in the iam chart, seen from the CALLER. `gateway auth/login` measured
+///   0.253–0.258 s; a floored call lands in `(0.25, 0.3]`. iam's OWN `Login`
+///   series excludes the floor by construction: its `Call` finishes inside
+///   `login_inner` and `hold_until_floor` runs after it (live iam `Login`
+///   mean 25 ms). Even at the gateway, a gateway-side refusal (bad request,
+///   upstream unavailable) lands below `0.25` with no floor failure, so a
+///   `le="0.25"` count is not by itself an alert.
 /// - `0.75` and `0.8`: the same pair for `RedeemEnrolment`, `responseFloorMs:
-///   750`.
+///   750`, with the same caller-side reading.
 /// - `0.5`, `1`, `2.5`, `5`, `10`: the slow-but-served range, half-decades.
 /// - `25`: the client pool-acquire timeout (ADR-0925, confirmed as shipped).
 ///   A call that waited the whole acquire lands just above it.
@@ -51,8 +58,8 @@ pub const DURATION: &str = "yadgar_call_duration_seconds";
 /// moves where timeouts land, not these edges. Same for both floors. Re-read
 /// this list when any of those values changes.
 pub const DURATION_BUCKETS: &[f64] = &[
-    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.3, 0.5, 0.75,
-    0.8, 1.0, 2.5, 5.0, 10.0, 25.0, 30.0,
+    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3,
+    0.5, 0.75, 0.8, 1.0, 2.5, 5.0, 10.0, 25.0, 30.0,
 ];
 /// Bytes returned to the caller — the D49 budget, aggregated.
 pub const BYTES: &str = "yadgar_bytes_returned_total";
@@ -168,8 +175,8 @@ mod tests {
         assert_eq!(
             DURATION_BUCKETS,
             &[
-                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.3,
-                0.5, 0.75, 0.8, 1.0, 2.5, 5.0, 10.0, 25.0, 30.0,
+                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2,
+                0.25, 0.3, 0.5, 0.75, 0.8, 1.0, 2.5, 5.0, 10.0, 25.0, 30.0,
             ]
         );
     }
