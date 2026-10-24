@@ -16,7 +16,7 @@ so a per-user label is what makes the metrics store fall over.
 
 ## Emission never blocks and never fails a call
 
-This sits on `recall`, the only latency-critical path (D25). A record that cannot
+This sits on `recall`, the only latency-critical path (D67, after D25). A record that cannot
 be written is logged and dropped; the call still succeeds. Telemetry that can fail
 a request is a new outage source bolted to every path in the system.
 
