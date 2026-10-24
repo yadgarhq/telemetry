@@ -223,7 +223,7 @@ fn encoded_bytes_overrides_the_rendered_length() {
     );
 }
 
-/// D25, on the path that makes it a process-killer rather than a lost record:
+/// D67, on the path that makes it a process-killer rather than a lost record:
 /// `Drop` runs during unwinding, and a panic there aborts. `println!` panics on
 /// a closed stdout (`failed printing to stdout: Broken pipe`), so this was live.
 ///

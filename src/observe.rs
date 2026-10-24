@@ -98,7 +98,7 @@ impl Call {
 
     /// Emit the event and the metrics.
     ///
-    /// **Never blocks and never fails the call** (D25). This runs on `recall`,
+    /// **Never blocks and never fails the call** (D67). This runs on `recall`,
     /// the only latency-critical path; a record that cannot be written is lost
     /// and the response still goes out. That is the exact opposite of D69's
     /// capability probe, which must always fail boot — the two rules point
