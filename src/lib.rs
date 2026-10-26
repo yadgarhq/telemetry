@@ -12,7 +12,7 @@
 //! the event, never on a metric label.
 //!
 //! **Emission never blocks and never fails a call.** This sits on `recall`, the
-//! only latency-critical path (D25). A record that cannot be written is lost and
+//! only latency-critical path (D67, after D25). A record that cannot be written is lost and
 //! the call still succeeds — telemetry that can fail a request is a new outage
 //! source bolted to every path in the system.
 //!

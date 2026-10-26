@@ -208,7 +208,7 @@ fn kind_reaches_the_wire_as_its_discriminant() {
     }
 }
 
-/// D25's rule, at the point it was only half true: serialisation failure was
+/// D67's rule, at the point it was only half true: serialisation failure was
 /// handled, the WRITE was a `println!` that panics on a closed stdout.
 ///
 /// Catches: `emit` propagating or unwrapping a sink error.

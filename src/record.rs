@@ -116,7 +116,7 @@ impl Builder {
 ///
 /// Implementations MUST NOT panic. This runs from [`Drop`], and a panic from a
 /// destructor while unwinding aborts the process — the loudest possible way to
-/// break the rule that telemetry never fails a call (D25). Report the failure by
+/// break the rule that telemetry never fails a call (D67). Report the failure by
 /// returning it; [`emit`] logs and drops it.
 pub trait Sink: Send + Sync {
     /// Write one serialised record. The line carries no trailing newline; a
@@ -200,7 +200,7 @@ fn write_line(line: &str) -> io::Result<()> {
 /// Write the record where the collector will find it.
 ///
 /// **Never blocks, never fails the call.** A serialisation failure is logged and
-/// dropped: D25's rule is that this path must not be able to break a request, and
+/// dropped: D67's rule is that this path must not be able to break a request, and
 /// a telemetry error that propagates is a new outage source on every path.
 ///
 /// The WRITE failure is dropped for the same reason, and it is the likelier of

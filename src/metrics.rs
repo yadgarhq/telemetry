@@ -96,7 +96,7 @@ pub fn suppressed(service: &'static str, tool: &'static str, bytes: u64) {
 /// the deployment.
 ///
 /// Failure is returned rather than panicking — a service that cannot export
-/// metrics should still serve traffic, which is the same rule as D25's for the
+/// metrics should still serve traffic, which is the same rule as D67's for the
 /// event path.
 pub fn install_prometheus(addr: SocketAddr) -> Result<(), Box<dyn std::error::Error>> {
     builder()?.with_http_listener(addr).install()?;
