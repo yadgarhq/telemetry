@@ -2,7 +2,7 @@
 name = "yadgar-telemetry"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.90"
+rust-version = "1.99.1"
 license = "Apache-2.0"
 description = "D67's instrumentation seam: spans, wide events, bounded metrics, and the calibrated token estimator."
 
