@@ -42,6 +42,7 @@ pub mod grpc;
 pub mod metrics;
 pub mod observe;
 pub mod record;
+pub mod request_id;
 
 /// Generated from the vendored contract (D16, D70).
 pub mod pb {
