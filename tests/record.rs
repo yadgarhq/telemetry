@@ -237,3 +237,35 @@ fn an_override_lasts_exactly_as_long_as_its_guard() {
     assert_eq!(records.len(), 1, "only the record emitted under the guard");
     assert_eq!(records[0]["tool"], "Inside");
 }
+
+/// An over-long request id is cut on the record itself, with the same bound and
+/// marker `request_id::capped` gives, so a service that never calls `capped`
+/// still cannot put an unbounded caller string on every record (D25: cap, never
+/// refuse). The record is built, not rejected.
+///
+/// Catches: `Builder::scope` storing `request_id` uncapped.
+#[test]
+fn an_over_long_request_id_is_capped_on_the_record() {
+    let long = "z".repeat(1000);
+    let record = Builder::new("svc", "Tool", Kind::Read)
+        .scope(&long, "i", "u", "p")
+        .outcome("OK")
+        .build();
+    let cut = format!("{}...", "z".repeat(256));
+    assert_eq!(record.request_id, cut);
+    assert_eq!(emitted(&record)["request_id"], cut.as_str());
+}
+
+/// An id of 256 characters or fewer is stored byte-for-byte as before: the cap
+/// must not alter any id a hop already recorded.
+///
+/// Catches: a cap that rewrites, trims or re-marks an id inside the bound.
+#[test]
+fn a_request_id_within_the_cap_is_recorded_unchanged() {
+    for id in ["", "0192e5a0-7c3d-7000-8000-000000000000", &"a".repeat(256)] {
+        let record = Builder::new("svc", "Tool", Kind::Read)
+            .scope(id, "i", "u", "p")
+            .build();
+        assert_eq!(record.request_id, id);
+    }
+}

@@ -36,7 +36,9 @@ impl Builder {
     /// The scope fields, from `common.v1.Scope`.
     ///
     /// `request_id` is the join key: one logical call fans out across hops, and
-    /// without it a roll-up sums one call several times.
+    /// without it a roll-up sums one call several times. It is stored CAPPED
+    /// ([`crate::request_id::capped`]), so no caller string is unbounded on a
+    /// record; an id of 256 characters or fewer is stored unchanged.
     pub fn scope(
         mut self,
         request_id: &str,
@@ -44,7 +46,7 @@ impl Builder {
         user_id: &str,
         project_id: &str,
     ) -> Self {
-        self.record.request_id = request_id.to_string();
+        self.record.request_id = crate::request_id::capped(request_id).into_owned();
         self.record.instance_id = instance_id.to_string();
         self.record.user_id = user_id.to_string();
         self.record.project_id = project_id.to_string();
